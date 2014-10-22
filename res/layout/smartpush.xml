@@ -5,6 +5,11 @@
     android:orientation="vertical"
     android:padding="@dimen/widget_margin" >
 
+    <ListView
+        android:id="@+id/notification_list_view"
+        android:layout_width="match_parent"
+        android:layout_height="125dp">
+    </ListView>
     
     <GridView
         android:id="@+id/gridview"

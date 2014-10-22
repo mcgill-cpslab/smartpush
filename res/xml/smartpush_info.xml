@@ -6,7 +6,7 @@
     android:minWidth="300dp"
     android:previewImage="@drawable/default_icon"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="1000"
+    android:updatePeriodMillis="100"
     android:widgetCategory="home_screen|keyguard" >
 
 </appwidget-provider>

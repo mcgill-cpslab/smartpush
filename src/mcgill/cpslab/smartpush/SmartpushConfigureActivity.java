@@ -66,7 +66,6 @@ public class SmartpushConfigureActivity extends Activity {
 			// the app widget
 			AppWidgetManager appWidgetManager = AppWidgetManager
 					.getInstance(context);
-			Smartpush.updateAppWidget(context, appWidgetManager, mAppWidgetId);
 
 			// Make sure we pass back the original appWidgetId
 			Intent resultValue = new Intent();

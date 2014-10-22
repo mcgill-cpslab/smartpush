@@ -5,8 +5,10 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="17"
-        android:targetSdkVersion="17" />
+        android:minSdkVersion="16"
+        android:targetSdkVersion="21" />
+    
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -19,7 +21,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".Smartpush" >
+        <receiver android:name=".SmartpushWidgetProvider" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -30,10 +32,34 @@
         </receiver>
 
         <service
-            android:name=".SmartpushService"
-            android:permission="android.permission.BIND_REMOTEVIEWS"
-            android:exported="false" >
+            android:name=".SmartpushRemoteViewsService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" >
         </service>
+        <service
+            android:name=".SmartpushNotificationDetectionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+        </service>
+        
+        <service android:name=".SmartpushCoreService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="mcgill.cpslab.smartpush.SmartpushCoreService"></action>
+            </intent-filter>
+        </service>
+        
+        <receiver
+            android:name=".Startup"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+		        <action android:name="android.intent.action.BOOT_COMPLETED" />
+		    </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
