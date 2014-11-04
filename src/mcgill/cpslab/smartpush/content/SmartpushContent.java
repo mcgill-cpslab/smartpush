@@ -1,5 +1,8 @@
 package mcgill.cpslab.smartpush.content;
 
+import java.util.Comparator;
+import java.util.Date;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -11,8 +14,9 @@ import android.graphics.Bitmap.Config;
 import android.graphics.drawable.Drawable;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
-public class SmartpushContent implements Parcelable{
+public class SmartpushContent implements Parcelable, Comparable<SmartpushContent>{
 	
 	/**
 	 * Type of the content
@@ -24,14 +28,31 @@ public class SmartpushContent implements Parcelable{
 	public static int ICON_Hight=100;
 	public static int ICON_Width=100;
 	
+	public static final String tag="SmartpushContent"; 
+	
+	public static String generateContentID(String package_name){
+		return package_name;
+	}
+	
+	public static String generateContentID(String package_name, int id){
+		return package_name+"_"+id;
+	}
+	
 	protected String name="";
 	protected String package_name="";
 	protected Bitmap icon=null;
 	protected Intent intent=null;
 	
+	protected String id=null;
+
 	protected Context context=null;
 	
 	protected String type;
+	
+	protected boolean inUse=false;
+	protected int frequency=0;
+	protected Date lastAccessed=new Date();
+	protected long lastDuration=0;
 	
 	//For ranking
 	private int priority;
@@ -66,6 +87,7 @@ public class SmartpushContent implements Parcelable{
 		}
 		
 		this.type=TYPE_Unknown;
+		this.id=generateContentID(package_name);
 	}
 	
 	private SmartpushContent(Parcel in){
@@ -125,6 +147,51 @@ public class SmartpushContent implements Parcelable{
 		this.icon = icon;
 	}
 
+	
+	
+	/**
+	 * @return the id
+	 */
+	public synchronized String getId() {
+		return id;
+	}
+
+	/**
+	 * @param id the id to set
+	 */
+	public synchronized void setId(String id) {
+		this.id = id;
+	}
+
+	public synchronized void startToUse(){
+		this.inUse=true;
+		this.lastAccessed=new Date();
+		this.frequency++;
+		Log.d(tag,"Content "+this.package_name+ " frequency "+this.frequency);
+	}
+	
+	public synchronized void stopToUse(){
+		this.inUse=false;
+		this.lastDuration=(new Date()).getTime()-this.lastAccessed.getTime();
+	}
+
+	@Override
+	public int compareTo(SmartpushContent another) {
+		//TODO: Implement the comparison method here
+		return another.frequency-this.frequency;
+	}
+	
+	public static Comparator<SmartpushContent> ContentComparator=new Comparator<SmartpushContent>(){
+
+		@Override
+		public int compare(SmartpushContent lhs, SmartpushContent rhs) {
+			// TODO Compare Here
+			Log.d(tag,"LHS compareto RHS "+ lhs.compareTo(rhs));
+			return lhs.compareTo(rhs);
+		}
+		
+	};
+	
 	public static final Parcelable.Creator<SmartpushContent> CREATOR=new Parcelable.Creator<SmartpushContent>() {
 
 		@Override

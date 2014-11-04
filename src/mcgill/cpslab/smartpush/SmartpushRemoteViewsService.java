@@ -1,6 +1,8 @@
 package mcgill.cpslab.smartpush;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 
 import mcgill.cpslab.smartpush.SmartpushCoreService.ServiceBinder;
@@ -50,12 +52,13 @@ public class SmartpushRemoteViewsService extends RemoteViewsService {
 	@Override
 	public RemoteViewsFactory onGetViewFactory(Intent intent) {
 		String type = intent.getStringExtra(SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_TYPE);
-		ArrayList<SmartpushApp> app_items=SmartpushData.getInstance().getApp_items();
-		ArrayList<SmartpushNotification> notification_items=SmartpushData.getInstance().getNotification_items();
+		ArrayList<SmartpushApp> apps=SmartpushData.getInstance().getApps();
+		ArrayList<SmartpushNotification> notifications=SmartpushData.getInstance().getNotifications();
+		Log.d(tag,"Notification size is "+notifications.size());
 		Log.d(tag, "Type is "+type);
 		if(type.equals(SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_TYPE_NOTIFICATION)){
 			Log.d(tag,"In branch type notification");
-			return new SmartpushNotificationRemoteViewFactory(this.getApplicationContext(),intent,notification_items);
+			return new SmartpushNotificationRemoteViewFactory(this.getApplicationContext(),intent,notifications);
 		}
 		else{
 			if(coreService==null){
@@ -64,10 +67,10 @@ public class SmartpushRemoteViewsService extends RemoteViewsService {
 			else{
 				Log.d(tag,"Core Service is not null");
 			}
-			if(app_items!=null){
-				Log.d(tag,"The number of items is "+app_items.size());
+			if(apps!=null){
+				Log.d(tag,"App items");
 			}
-			return new SmartpushAppRemoteViewFactory(this.getApplicationContext(),intent,app_items);
+			return new SmartpushAppRemoteViewFactory(this.getApplicationContext(),intent,apps);
 		}
 	}
 }

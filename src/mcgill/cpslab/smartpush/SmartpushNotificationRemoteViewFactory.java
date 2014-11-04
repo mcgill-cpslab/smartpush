@@ -1,8 +1,10 @@
 package mcgill.cpslab.smartpush;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import mcgill.cpslab.smartpush.content.SmartpushContent;
+import mcgill.cpslab.smartpush.content.SmartpushData;
 import mcgill.cpslab.smartpush.content.SmartpushNotification;
 
 import android.app.Notification;
@@ -38,8 +40,7 @@ public class SmartpushNotificationRemoteViewFactory implements RemoteViewsServic
 
 	@Override
 	public void onDataSetChanged() {
-		// TODO Auto-generated method stub
-		
+		notifications=SmartpushData.getInstance().getNotifications();
 	}
 
 	@Override
@@ -63,7 +64,7 @@ public class SmartpushNotificationRemoteViewFactory implements RemoteViewsServic
 		Log.d(tag,"Is contentView empty?"+(notifications.get(position)==null));
 		Log.d(tag,"Notification is from "+notifications.get(position).getPackage_name());
 		Log.d(tag,"Notification is "+ notifications.get(position).getName());
-		Log.d(tag,"Notification is "+ notifications.get(position).getIntent().toString());
+		Log.d(tag,"Notification is "+ notifications.get(position).getIntent());
 		
 		SmartpushNotification notification = notifications.get(position);
 		
@@ -92,6 +93,7 @@ public class SmartpushNotificationRemoteViewFactory implements RemoteViewsServic
 			fillinIntent.putExtras(extras);
 			//PendingIntent pi=notification.getNotification().contentIntent;
 			rv.setOnClickFillInIntent(R.id.smartpush_notification_item, fillinIntent);
+			
 			Log.d(tag,"Intent is "+pendingIntent.toString());
 		}
 		//RemoteViews rv=notification.getNotification().contentView;

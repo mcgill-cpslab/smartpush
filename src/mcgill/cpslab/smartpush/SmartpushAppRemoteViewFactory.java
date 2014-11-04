@@ -1,9 +1,11 @@
 package mcgill.cpslab.smartpush;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 import mcgill.cpslab.smartpush.content.SmartpushApp;
 import mcgill.cpslab.smartpush.content.SmartpushContent;
+import mcgill.cpslab.smartpush.content.SmartpushData;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
@@ -38,7 +40,7 @@ public class SmartpushAppRemoteViewFactory implements RemoteViewsService.RemoteV
 	@Override
 	public void onDataSetChanged() {
 		// TODO Auto-generated method stub
-		
+		items=SmartpushData.getInstance().getApps();
 	}
 
 	@Override

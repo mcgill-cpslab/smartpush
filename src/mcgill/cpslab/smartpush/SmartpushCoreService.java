@@ -9,6 +9,8 @@ import mcgill.cpslab.smartpush.content.SmartpushApp;
 import mcgill.cpslab.smartpush.content.SmartpushContent;
 import mcgill.cpslab.smartpush.content.SmartpushData;
 import mcgill.cpslab.smartpush.content.SmartpushNotification;
+import mcgill.cpslab.smartpush.event.SmartpushAppEventListener;
+import mcgill.cpslab.smartpush.event.SmartpushEventDetectionService;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -46,6 +48,11 @@ public class SmartpushCoreService extends Service{
 	private List<ApplicationInfo> packages;
 	private SmartpushData data;
 	
+	private String currentApp;
+	private boolean inApp;
+	
+	private boolean bindToEventDetector=false;
+	
 	//For test
 	private Timer timer;
 	
@@ -54,7 +61,20 @@ public class SmartpushCoreService extends Service{
 		@Override
 		public void run() {
 			// TODO Auto-generated method stub
-			updateWidget();
+			if(bindToEventDetector){
+				updateWidget();
+			}
+			else{
+				bindToEventDetector = SmartpushEventDetectionService.bindAppEventListener(appListener);
+		    	if(bindToEventDetector){
+		    		Log.d(tag,"SmartpushEventDetectionService Bind successfully!");
+		    	}
+		    	else{
+		    		Log.d(tag,"Fail to SmartpushEventDetectionService!");
+
+		    	}
+			}
+			
 		}
 		
 	};
@@ -70,13 +90,10 @@ public class SmartpushCoreService extends Service{
 		appWidgetManager=AppWidgetManager.getInstance(this.getApplicationContext());
 		data=SmartpushData.getInstance();
 		
-		ArrayList<SmartpushApp> apps=data.getApp_items();
-		
-		//for test
-		ArrayList<SmartpushNotification> notifications=data.getNotification_items();
-		
 		IntentFilter intentfilter=new IntentFilter();
-		intentfilter.addAction(SmartpushNotificationDetectionService.Action_Notification);
+		intentfilter.addAction(SmartpushNotificationListenerService.Action_Notification_Posted);
+		intentfilter.addAction(SmartpushNotificationListenerService.Action_Notification_Removed);
+		intentfilter.addAction(SmartpushEventDetectionService.View_Clicked);
 		LocalBroadcastManager.getInstance(this).registerReceiver(localBoardcastReceiver, intentfilter);
 		
 		pm=this.getApplicationContext().getPackageManager();
@@ -88,92 +105,66 @@ public class SmartpushCoreService extends Service{
 			
 			//save intent of applications which can be started externally in array list
 			if(app_item.getIntent()!=null){
-				apps.add(app_item);
+				Log.d(tag,"Intent action "+app_item.getIntent().getAction());
+				Log.d(tag,"Intent categories "+app_item.getIntent().getCategories());
+				//Log.d(tag,"Intent "+app_item.getIntent().)
+				data.pushApp(app_item);
 			}
 		}
+    	bindToEventDetector = SmartpushEventDetectionService.bindAppEventListener(appListener);
+    	if(bindToEventDetector){
+    		Log.d(tag,"SmartpushEventDetectionService Bind successfully!");
+    	}
+    	else{
+    		Log.d(tag,"Fail to SmartpushEventDetectionService!");
+
+    	}
     	//For test
     	timer=new Timer();
-    	//timer.schedule(updateTask, 0, 5000);
+    	timer.schedule(updateTask, 0, 10000);
 	}
 
 
 	private BroadcastReceiver localBoardcastReceiver=new BroadcastReceiver(){
-
+		
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// TODO Auto-generated method stub
 			String action=intent.getAction();
 			Log.d(tag,"action is "+action);
-			if(action==SmartpushNotificationDetectionService.Action_Notification){
-				String package_name=(String)intent.getStringExtra(SmartpushNotificationDetectionService.BR_Source);
+			if(action.equals(SmartpushNotificationListenerService.Action_Notification_Posted)){
+				String package_name=(String)intent.getStringExtra(SmartpushNotificationListenerService.BR_Source);
 				if(package_name!=null){
 					Log.d(tag,"Notification from "+package_name);
-					ArrayList<SmartpushNotification> notifications=data.getNotification_items();
-					Notification ntf=(Notification)intent.getParcelableExtra(SmartpushNotificationDetectionService.BR_Notification);
+					Notification ntf=(Notification)intent.getParcelableExtra(SmartpushNotificationListenerService.BR_Notification);
+					int id=intent.getIntExtra(SmartpushNotificationListenerService.BR_Notification_Id, 0);
 					//String package_name=(String)intent.getStringExtra(SmartpushNotificationDetectionService.BR_Source);
-					Log.d(tag,"Notifications size:"+notifications.size());
-					SmartpushNotification notification=new SmartpushNotification(SmartpushCoreService.this.getApplicationContext(),package_name);
+					Log.d(tag,"Notifications id is " + id);
+					SmartpushNotification notification=new SmartpushNotification(SmartpushCoreService.this.getApplicationContext(),package_name,id);
 					notification.setNotification(ntf);
-					notifications.add(notification);
+					data.pushNotification(notification);
 					appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetManager.getAppWidgetIds(new ComponentName(context,SmartpushWidgetProvider.class)), R.id.notification_list_view);
 				}
 				else{
 					Log.d(tag, "Package_name is null");
 				}
 			}
+			else if(action.equals(SmartpushNotificationListenerService.Action_Notification_Removed)){
+				String package_name=(String)intent.getStringExtra(SmartpushNotificationListenerService.BR_Source);
+				int id=intent.getIntExtra(SmartpushNotificationListenerService.BR_Notification_Id, 0);
+				data.removeNotification(package_name, id);
+				appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetManager.getAppWidgetIds(new ComponentName(context,SmartpushWidgetProvider.class)), R.id.notification_list_view);
+			}
+			else if(action.equals(SmartpushEventDetectionService.View_Clicked)){
+				
+			}
 		}
 		
 	};
 	
 	private void updateWidget(){
-//		ComponentName provider = new ComponentName(this.getApplicationContext(),SmartpushWidgetProvider.class);
-//		int[] appWidgetIds=appWidgetManager.getAppWidgetIds(provider);
-//		final int N = appWidgetIds.length;
-//		Log.d(tag, "Smartpush onUpdate");
-//		for (int i = 0; i < N; i++) {
-//			
-//			Intent app_intent = new Intent(this.getApplicationContext(),SmartpushRemoteViewsService.class);
-//			app_intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
-//			app_intent.putExtra(SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_TYPE,SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_TYPE_APP);
-//			//app_intent.putExtra(SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_CONTENT,items);
-//			app_intent.setData(Uri.parse(app_intent.toUri(Intent.URI_INTENT_SCHEME)));
-//			
-//			Log.d(tag,"create notification intent");
-//			
-//			Intent notification_intent = new Intent(this.getApplicationContext(),SmartpushRemoteViewsService.class);
-//			notification_intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
-//			notification_intent.putExtra(SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_TYPE,SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_TYPE_NOTIFICATION);
-//			notification_intent.setData(Uri.parse(notification_intent.toUri(Intent.URI_INTENT_SCHEME)));
-//			
-//			
-//			Log.d(tag,"create app intent");
-//			
-//			RemoteViews rv=new RemoteViews(this.getPackageName(),R.layout.smartpush);
-//			
-//			Log.d(tag,"Smartpush AppWidget "+i);
-//			
-//			//For test Notification bar
-//			rv.setRemoteAdapter(R.id.notification_list_view,notification_intent);
-//			//rv.setTextViewText(R.id.notification_list_view, "Notification test 1");
-//			//rv.setTextViewTextSize(R.id.notification_list_view, TypedValue.COMPLEX_UNIT_SP, 40);
-//			//rv.setRemoteAdapter(R.id.notification_list_view, rv);
-//			rv.setRemoteAdapter(R.id.gridview, app_intent);
-//			
-//			
-//			rv.setEmptyView(R.id.gridview, R.id.empty_view);
-//			rv.setEmptyView(R.id.notification_list_view, R.id.empty_view);
-//			//rv.setTextViewText(R.id.empty_view, "APP_NOTIFICATION");
-//			//Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage("com.sohu.newsclient");
-//			//Intent launchIntent=new Intent(context,SmartpushConfigureActivity.class);
-//			Intent clickIntent = new Intent(this.getApplicationContext(),SmartpushWidgetProvider.class);
-//			clickIntent.setAction(SmartpushWidgetProvider.SMARTPUSH_CLICK_ACTION);
-//			PendingIntent pendingIntent=PendingIntent.getBroadcast(this.getApplicationContext(), 0, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//			rv.setPendingIntentTemplate(R.id.gridview, pendingIntent);
-//			rv.setPendingIntentTemplate(R.id.notification_list_view,pendingIntent);
-//			
-//			
-//			appWidgetManager.updateAppWidget(appWidgetIds[i], rv);
-//		}
+		Log.d(tag,"Update Apps");
+		appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetManager.getAppWidgetIds(new ComponentName(this.getApplicationContext(),SmartpushWidgetProvider.class)), R.id.gridview);
 	}
 	
 	@Override
@@ -194,5 +185,25 @@ public class SmartpushCoreService extends Service{
 			return SmartpushCoreService.this;
 		}
 	}
+	
+	private SmartpushAppEventListener appListener=new SmartpushAppEventListener(){
+
+		@Override
+		public void startApp(String packageName) {
+			// TODO Auto-generated method stub
+			SmartpushData.getInstance().getApp(packageName).startToUse();
+			SmartpushCoreService.this.currentApp=packageName;
+			SmartpushCoreService.this.inApp=true;
+		}
+
+		@Override
+		public void stopApp(String packageName) {
+			// TODO Auto-generated method stub
+			SmartpushData.getInstance().getApp(packageName).stopToUse();
+			
+			SmartpushCoreService.this.inApp=false;
+		}
+		
+	};
 	
 }
