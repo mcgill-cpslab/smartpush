@@ -3,6 +3,8 @@ package mcgill.cpslab.smartpush.content;
 import java.util.Comparator;
 import java.util.Date;
 
+import mcgill.cpslab.smartpush.content.database.SmartpushDatabaseHelper;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -56,7 +58,7 @@ public class SmartpushContent implements Parcelable, Comparable<SmartpushContent
 	
 	//For ranking
 	private int priority;
-	private int ranking;
+	private int frequencyRanking;
 	
 	/**
 	 * Constructor
@@ -147,8 +149,6 @@ public class SmartpushContent implements Parcelable, Comparable<SmartpushContent
 		this.icon = icon;
 	}
 
-	
-	
 	/**
 	 * @return the id
 	 */
@@ -161,6 +161,28 @@ public class SmartpushContent implements Parcelable, Comparable<SmartpushContent
 	 */
 	public synchronized void setId(String id) {
 		this.id = id;
+	}
+
+	/**
+	 * @return the frequency
+	 */
+	public synchronized int getFrequency() {
+		return frequency;
+	}
+
+	/**
+	 * @param frequency the frequency to set
+	 */
+	public synchronized void setFrequency(int frequency) {
+		this.frequency = frequency;
+	}
+
+	public int getFrequencyRanking() {
+		return frequencyRanking;
+	}
+
+	public void setFrequencyRanking(int frequencyRanking) {
+		this.frequencyRanking = frequencyRanking;
 	}
 
 	public synchronized void startToUse(){
@@ -186,7 +208,7 @@ public class SmartpushContent implements Parcelable, Comparable<SmartpushContent
 		@Override
 		public int compare(SmartpushContent lhs, SmartpushContent rhs) {
 			// TODO Compare Here
-			Log.d(tag,"LHS compareto RHS "+ lhs.compareTo(rhs));
+			//Log.d(tag,"LHS compareto RHS "+ lhs.compareTo(rhs));
 			return lhs.compareTo(rhs);
 		}
 		

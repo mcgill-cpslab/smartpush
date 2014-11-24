@@ -32,6 +32,7 @@ public class SmartpushRemoteViewsService extends RemoteViewsService {
 	public static final String tag="SmartpushService";
 	
 	private SmartpushCoreService coreService=null;
+	private SmartpushData data;
 
 	public SmartpushRemoteViewsService() {
 		
@@ -40,11 +41,12 @@ public class SmartpushRemoteViewsService extends RemoteViewsService {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		Log.d(tag,"on Create");	}
+		Log.d(tag,"on Create");
+		data = SmartpushData.getInstance(this.getApplicationContext());
+	}
 	
 	@Override
 	public void onDestroy() {
-		
 		super.onDestroy();
 	}
 	
@@ -52,8 +54,8 @@ public class SmartpushRemoteViewsService extends RemoteViewsService {
 	@Override
 	public RemoteViewsFactory onGetViewFactory(Intent intent) {
 		String type = intent.getStringExtra(SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_TYPE);
-		ArrayList<SmartpushApp> apps=SmartpushData.getInstance().getApps();
-		ArrayList<SmartpushNotification> notifications=SmartpushData.getInstance().getNotifications();
+		List<SmartpushApp> apps=data.getApps();
+		List<SmartpushNotification> notifications=data.getNotifications();
 		Log.d(tag,"Notification size is "+notifications.size());
 		Log.d(tag, "Type is "+type);
 		if(type.equals(SmartpushWidgetProvider.SMARTPUSH_REMOTEVIEW_TYPE_NOTIFICATION)){

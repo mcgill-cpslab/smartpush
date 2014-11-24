@@ -1,5 +1,7 @@
 package mcgill.cpslab.smartpush;
 
+import android.app.KeyguardManager;
+import android.app.KeyguardManager.KeyguardLock;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 import android.appwidget.AppWidgetManager;
@@ -9,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.util.TypedValue;
 import android.widget.RemoteViews;
@@ -30,7 +33,11 @@ public class SmartpushWidgetProvider extends AppWidgetProvider {
 	
 	public static final String SMARTPUSH_REMOTEVIEW_CONTENT="mcgill.cpslab.smartpush.content";
 	
+	public static final String SMARTPUSH_UNLOCK_SCREEN="mcgill.cpslab.smartpush.unlock"; 
+	
 	private static final String tag="SmartpushWidgetProvider";
+	
+	private KeyguardLock lock = null;
 	
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
@@ -122,7 +129,7 @@ public class SmartpushWidgetProvider extends AppWidgetProvider {
 		}
 		//super.onUpdate(context, appWidgetManager, appWidgetIDs);
 	}
-
+	
 	@Override
 	public void onDeleted(Context context, int[] appWidgetIds) {
 		// When the user deletes the widget, delete the preference associated
@@ -137,6 +144,7 @@ public class SmartpushWidgetProvider extends AppWidgetProvider {
 	@Override
 	public void onEnabled(Context context) {
 		// Enter relevant functionality for when the first widget is created
+		
 		Intent intent = new Intent(context,SmartpushCoreService.class);
 		context.startService(intent);
 	}
@@ -148,8 +156,11 @@ public class SmartpushWidgetProvider extends AppWidgetProvider {
 			Log.d(tag,"On Receive, Smart_Click_Action");
 			Bundle bundle=intent.getExtras();
 			Intent activityIntent = (Intent)bundle.getParcelable(SMARTPUSH_EXTERNAL_APP_INTENT);
+			//activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			PendingIntent pendingIntent = (PendingIntent)bundle.getParcelable(SMARTPUSH_EXTERNAL_NOTIFICATION_INTENT);
+			//pendingIntent.
 			//Log.d(tag, "On Receive "+activityIntent.toString());
+			KeyguardManager km = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
 			if(activityIntent!=null){
 				context.startActivity(activityIntent);
 			}
@@ -160,6 +171,11 @@ public class SmartpushWidgetProvider extends AppWidgetProvider {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
+			if(km.isKeyguardLocked()){
+				LocalBroadcastManager lbm=LocalBroadcastManager.getInstance(context);
+				boolean b = lbm.sendBroadcast(new Intent(SMARTPUSH_UNLOCK_SCREEN));
+				Log.d(tag,"lbm "+b);
 			}
 		}
 		super.onReceive(context, intent);

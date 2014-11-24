@@ -2,6 +2,7 @@ package mcgill.cpslab.smartpush;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 import mcgill.cpslab.smartpush.content.SmartpushApp;
 import mcgill.cpslab.smartpush.content.SmartpushContent;
@@ -23,9 +24,9 @@ public class SmartpushAppRemoteViewFactory implements RemoteViewsService.RemoteV
 	
 	private Context mContext;
     private int mAppWidgetId;
-    private ArrayList<SmartpushApp> items;
+    private List<SmartpushApp> items;
     
-    public SmartpushAppRemoteViewFactory(Context context,Intent intent,ArrayList<SmartpushApp> items){
+    public SmartpushAppRemoteViewFactory(Context context,Intent intent,List<SmartpushApp> items){
     	mContext=context;
     	mAppWidgetId=intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,AppWidgetManager.INVALID_APPWIDGET_ID);
     	this.items=items;
@@ -40,7 +41,7 @@ public class SmartpushAppRemoteViewFactory implements RemoteViewsService.RemoteV
 	@Override
 	public void onDataSetChanged() {
 		// TODO Auto-generated method stub
-		items=SmartpushData.getInstance().getApps();
+		items=SmartpushData.getInstance(mContext).getApps();
 	}
 
 	@Override

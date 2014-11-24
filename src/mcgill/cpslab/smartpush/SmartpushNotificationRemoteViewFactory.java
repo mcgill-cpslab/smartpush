@@ -2,6 +2,7 @@ package mcgill.cpslab.smartpush;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import mcgill.cpslab.smartpush.content.SmartpushContent;
 import mcgill.cpslab.smartpush.content.SmartpushData;
@@ -23,11 +24,11 @@ public class SmartpushNotificationRemoteViewFactory implements RemoteViewsServic
 	
 	public static final String tag="SmartpushNotificationRemoteViewFactory";
 	
-	private ArrayList<SmartpushNotification> notifications=null;
+	private List<SmartpushNotification> notifications=null;
 	private Context mContext;
 	
 	
-	public SmartpushNotificationRemoteViewFactory(Context context,Intent intent,ArrayList<SmartpushNotification> notifications){
+	public SmartpushNotificationRemoteViewFactory(Context context,Intent intent,List<SmartpushNotification> notifications){
 		this.notifications=notifications;
 		this.mContext=context;
 	}
@@ -40,7 +41,7 @@ public class SmartpushNotificationRemoteViewFactory implements RemoteViewsServic
 
 	@Override
 	public void onDataSetChanged() {
-		notifications=SmartpushData.getInstance().getNotifications();
+		notifications=SmartpushData.getInstance(this.mContext).getNotifications();
 	}
 
 	@Override

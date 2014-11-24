@@ -8,5 +8,5 @@ public class SmartpushApp extends SmartpushContent{
 		super(context, package_name);
 		this.type=TYPE_APP;
 	}
-
+	
 }

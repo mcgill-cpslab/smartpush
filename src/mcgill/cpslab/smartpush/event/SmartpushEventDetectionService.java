@@ -21,6 +21,9 @@ public class SmartpushEventDetectionService extends AccessibilityService {
 	public static final String Intent_Extra_Event_Source="mcgill.cpslab.smartpush.SmartpushEventDetectionService.extra.eventsource";
 	public static final String Intent_Extra_Event_Time="mcgill.cpslab.smartpush.SmartpushEventDetectionService.extra.eventtime";
 	
+	public static final String Intent_App_Started="mcgill.cpslab.smartpush.SmartpushEventDetectionService.action.appstarted";
+	public static final String Intent_App_Stopped="mcgill.cpslab.smartpush.SmartpushEventDetectionService.action.appstopped";
+	
 	//Singleton
 	private static SmartpushEventDetectionService service=null;
 	public static boolean bindAppEventListener(SmartpushAppEventListener sael){
@@ -74,44 +77,72 @@ public class SmartpushEventDetectionService extends AccessibilityService {
 		setServiceInfo(info);
 	}
 	
+//	private boolean sendAppStartedBroadCast(String packageName){
+//		Intent intent=new Intent();
+//		intent.setAction(Intent_App_Started);
+//		intent.putExtra(Intent_Extra_Event_Source, packageName);
+//		boolean app_started_bool = lbm.sendBroadcast(intent);
+//		return app_started_bool;
+//	}
+//	
+//	private boolean sendAppStoppedBroadCast(String packageName){
+//		Intent intent=new Intent();
+//		intent.setAction(Intent_App_Stopped);
+//		intent.putExtra(Intent_Extra_Event_Source, packageName);
+//		boolean app_stopped_bool = lbm.sendBroadcast(intent);
+//		return app_stopped_bool;
+//	}
+	
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
 		//Log.d(tag,"onAccessibilityEvent");
 		//Log.d(tag,"Event Type is "+event.getEventType());
 		//Log.d(tag,"Event source is "+event.getPackageName());
-		
-		String packageName=(String)event.getPackageName();
-		//Log.d(tag,"inApp "+inApp);
-		if(!inApp){
-			//Log.d(tag,"inApp "+packageName);
-			if(SmartpushData.getInstance().getApp(packageName)!=null){
-				this.currentPackage=packageName;
-				inApp=true;
-				Log.d(tag,"StartApp "+packageName);
-				for(SmartpushAppEventListener spael:appListeners){
-					spael.startApp(packageName);
-				}
-			}
-		}
-		else{
+		if(event.getEventType()==AccessibilityEvent.TYPE_VIEW_CLICKED 
+				|| event.getEventType()==AccessibilityEvent.TYPE_VIEW_SCROLLED
+				|| event.getEventType()==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+				|| event.getEventType()==AccessibilityEvent.TYPE_VIEW_SELECTED
+				|| event.getEventType()==AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED){
 			
-			if(!packageName.equals(this.currentPackage)){
-				for(SmartpushAppEventListener spael:appListeners){
-					spael.stopApp(this.currentPackage);
-				}
-				Log.d(tag,"StopApp "+this.currentPackage);
-				inApp=false;
-				if(SmartpushData.getInstance().getApp(packageName)!=null){
+			String packageName=(String)event.getPackageName();
+			//Log.d(tag,"inApp "+inApp);
+			if(!inApp){
+				//Log.d(tag,"inApp "+packageName);
+				if(SmartpushData.getInstance(this.getApplicationContext()).getApp(packageName)!=null){
 					this.currentPackage=packageName;
+					inApp=true;
+					Log.d(tag,"StartApp "+packageName);
+//					boolean app_started_bool = this.sendAppStartedBroadCast(packageName);
+//					Log.d(tag, "App Started bool " +app_started_bool);
+					
 					for(SmartpushAppEventListener spael:appListeners){
 						spael.startApp(packageName);
 					}
-					inApp=true;
-					Log.d(tag,"StartApp "+packageName);
+				}
+			}
+			else{
+				if(!packageName.equals(this.currentPackage)){
+					for(SmartpushAppEventListener spael:appListeners){
+						spael.stopApp(this.currentPackage);
+					}
+					Log.d(tag,"StopApp "+this.currentPackage);
+//					boolean app_stopped_bool = this.sendAppStoppedBroadCast(this.currentPackage);
+//					Log.d(tag, "App Stopped bool " +app_stopped_bool);
+					inApp=false;
+					if(SmartpushData.getInstance(this.getApplicationContext()).getApp(packageName)!=null){
+						this.currentPackage=packageName;
+						
+						for(SmartpushAppEventListener spael:appListeners){
+							spael.startApp(packageName);
+						}
+						inApp=true;
+						Log.d(tag,"StartApp "+packageName);
+//						boolean app_started_bool = this.sendAppStartedBroadCast(packageName);
+//						Log.d(tag, "App Started bool " +app_started_bool);
+					}
 				}
 			}
 		}
-		
 //		if(event.getEventType()==AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED){
 //			Log.d(tag,"Notification is from "+event.getPackageName().toString());
 //			//Log.d(tag,"Notification is " + event.getSource().getText());
